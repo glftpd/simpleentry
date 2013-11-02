@@ -975,8 +975,7 @@ int BaseSock::Write(char *data,int nrbytes)
 {	
 	int total = 0;
 	int bytesleft = nrbytes;
-	int rc,len;
-	len = nrbytes;
+	int rc;
 	int count = 0;
 	
 	fd_set data_writefds;
@@ -1442,8 +1441,7 @@ int BaseSock::BlockWrite(char *data,int nrbytes)
 	// no select - using blocking sockets
 	int total = 0;
 	int bytesleft = nrbytes;
-	int rc,len;
-	len = nrbytes;
+	int rc;
 	int count = 0;
 	
 	while(total < nrbytes)

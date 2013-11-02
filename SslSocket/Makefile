@@ -1,7 +1,7 @@
 CPPFLAGS = -W -Wall -g -I/usr/local/ssl/include 
 
-.cc.o   :
-	 g++ -c $(CPPFLAGS) $< -o $@
+.cpp.o   :
+	 g++ -fPIC -c $(CPPFLAGS) $< -o $@
 	 
 
 all: callback.o dh1080.o fingerprint.o lock.o config.o basesock.o clientsock.o serversock.o strings.o thread.o

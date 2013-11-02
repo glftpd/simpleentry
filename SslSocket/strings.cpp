@@ -258,8 +258,8 @@ int ftpCode(string reply)
 
 bool parsePasvCmd(string cmd, string &ip, int &port)
 {
-	unsigned int pos1 = cmd.find("(");
-	unsigned int pos2 = cmd.find(")",pos1);
+	size_t pos1 = cmd.find("(");
+	size_t pos2 = cmd.find(")",pos1);
 	if(pos1 == string::npos || pos2 == string::npos) return false;
 	string tmp = cmd.substr(pos1 + 1, pos2 - 2);
 	vector<string> vec;
@@ -272,8 +272,8 @@ bool parsePasvCmd(string cmd, string &ip, int &port)
 
 bool parsePortCmd(string cmd, string &ip, int &port)
 {
-	unsigned int pos1 = cmd.find(" ");
-	unsigned int pos2 = cmd.length() -1;
+	size_t pos1 = cmd.find(" ");
+	size_t pos2 = cmd.length() -1;
 	if(pos1 == string::npos || pos2 == string::npos) return false;
 	string tmp = cmd.substr(pos1 + 1, pos2 - 2);
 	vector<string> vec;
@@ -291,7 +291,7 @@ int random_range(int lowest_number, int highest_number)
   }
 
   int range = highest_number - lowest_number + 1;
-  double r = ((double)rand() / (double)(RAND_MAX+1) );
+  double r = ((double)rand() / ((double)(RAND_MAX)+1) );
   return (lowest_number + abs(int(range * r)));
 }
 
@@ -313,7 +313,7 @@ bool StartsWith(string s, string v)
 string replace(string input, string repl, string with)
 {
 	string tmp = input;
-	unsigned int position = tmp.find(repl);
+	size_t position = tmp.find(repl);
 
 	while (position != string::npos)
 	{

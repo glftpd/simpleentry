@@ -18,7 +18,8 @@ namespace SslSocket
 
 	int b64toh(char *b, char *d)
 	{
-		unsigned int i,k,l;
+		int i;
+		unsigned int k,l;
 
 		l = strlen(b);
 		if (l < 2) return 0;

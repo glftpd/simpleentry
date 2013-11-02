@@ -174,7 +174,7 @@ int thread_cleanup(void)
 #endif
 
 
-DH *tmp_dh_cb(SSL *ssl, int is_export, int keylength)
+DH *tmp_dh_cb(SSL */*ssl*/, int /*is_export*/, int /*keylength*/)
 {	
 	return BaseSock::globaldh;	
 }

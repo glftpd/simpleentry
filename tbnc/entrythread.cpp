@@ -10,7 +10,7 @@ bool EntryThread::checkReply(string reply)
 {
 	if(reply.find(options.siteip) != string::npos) return false;
 	string tmp = options.siteip;
-	int pos = tmp.find(".");
+	size_t pos = tmp.find(".");
 	while(pos != string::npos)
 	{
 		tmp = tmp.replace(pos,1,",");

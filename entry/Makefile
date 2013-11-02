@@ -1,6 +1,6 @@
 CPPFLAGS = -W -Wall -g -I/usr/local/ssl/include -I../SslSocket
 
-.cc.o   :
+.cpp.o   :
 	 g++ -c $(CPPFLAGS) $< -o $@
 	 
 

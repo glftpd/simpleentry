@@ -2,6 +2,7 @@
 #define __GLOBAL_H
 #define _MULTI_THREADED
 
+#include <unistd.h>
 #include <iostream>
 #include <string>
 #include <sstream>
