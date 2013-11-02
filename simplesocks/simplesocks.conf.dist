@@ -1,0 +1,26 @@
+# required options
+
+username=bla;
+userpass=blub;
+listen_port=12345;
+
+# optional settings (remove to use default value)
+
+allow_nopass=0; // allow login to socks without user/pass authentication
+use_ssl=0; // make ssl handshake before the socks5 handschake - no official feature of socks5 protocol
+cert_path=; // if use_ssl=1 specify cert file here
+connect_ip=; // bind to this ip for outgoing connects
+listen_ip=; // bind to this ip
+user_ip=; // if set, user must have ip from this ranges
+          // ranges are seperated with ','
+          // '?' and '*' allowed '-' not
+bindstart=40000; // in bind mode random port is picked from this range
+bindend=45000;
+pidfile=; // if set a file containing the pid is created (only on linux)
+buffersize=65536; // internal buffersize in bytes
+sndrcvbufsize=625000; // tcp send and receive socket buffer size
+delay=5; // delay in ms after EAGAIN error
+retrycount=15; // how many retries for EAGAIN errors
+
+# format of options is name=value;
+# no spaces etc and don't forget the ';'
