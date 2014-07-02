@@ -11,6 +11,9 @@ use_ssl=0; // make ssl handshake before the socks5 handschake - no official feat
 cert_path=; // if use_ssl=1 specify cert file here
 connect_ip=; // bind to this ip for outgoing connects
 listen_ip=; // bind to this ip
+iprange=; // if set, user must have ip from this ranges
+          // ranges are seperated with ','
+          // '?' and '*' allowed '-' not
 bindstart=40000; // in bind mode random port is picked from this range
 bindend=45000;
 pidfile=; // if set a file containing the pid is created (only on linux)
