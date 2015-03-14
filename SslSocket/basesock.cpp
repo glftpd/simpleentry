@@ -1071,8 +1071,7 @@ int BaseSock::FastWrite(char *data,int nrbytes)
 {	
 	int total = 0;
 	int bytesleft = nrbytes;
-	int rc,len;
-	len = nrbytes;
+	int rc;
 	int count = 0;
 
 	while(total < nrbytes)
