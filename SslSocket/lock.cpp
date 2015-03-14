@@ -38,5 +38,3 @@ void Lock::unlock(void)
 	pthread_mutex_unlock(&mutex);
 #endif
 }
-
-

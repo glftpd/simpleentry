@@ -52,7 +52,9 @@ public:
 	int ReadLine(string &str);
 	int WriteLine(string str);
 	int Read(char *buffer,int &nrbytes);
+	int FastRead(char *buffer,int &nrbytes);
 	int Write(char *data,int nrbytes);
+	int FastWrite(char *data,int nrbytes);
 	int BlockWrite(char *data,int nrbytes);
 	int BlockRead(char *buffer, int &nrbytes);
 	struct sockaddr_in GetIp(string ip, int port);

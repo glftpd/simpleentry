@@ -21,13 +21,10 @@ int main(int argc,char *argv[])
 	arganz = argc -1;
 	if(arganz > 0) arg1 = argv[1];
 	if(arganz > 1) arg2 = argv[2];
-
-	cout << "Simple Win32/Linux traffic bouncer v0.2.2 2011/02/07 (c) _hawk_/PPX\n";
-	cout << "Using " << version << "\n";
 	
 	if(arganz < 1 && arganz > 2)
 	{
-		cout << "usage: tbnc <configfile> or tbnc -u <configfile> for uncrypted conf\n";
+		cout << "usage: confTest <configfile> or confTest -u <configfile> for uncrypted conf\n";
 		return 0;
 	}
 	
@@ -94,76 +91,80 @@ int main(int argc,char *argv[])
 	ServerSock ss;
 	if(!ss.Init())
 	{
-		cout << "socket init failed\n";
+		cout << "listen socket init failed\n";
 		return 0;
 	}
+	
+	cout << "starting site connect test\n";
+
+	ClientSock sitesock;
+	if(!sitesock.Init())
+	{
+		cout << "sitesock init failed\n";
+		return 0;
+	}
+	if(options.connectip != "")
+	{
+		cout << "connect ip: " << options.connectip << "\n";
+		if(!sitesock.Bind(options.connectip,0))
+		{
+			cout << "sitesock bind failed\n";
+			return 0;
+		}
+	}
+	if(!sitesock.Connect(options.siteip,options.siteport))
+	{
+		cout << "connect failed\n";
+		return 0;
+	}
+
+	fd_set readfds;
+	fd_set errorfds;
+
+	FD_ZERO(&readfds);
+	FD_ZERO(&errorfds);
+	FD_SET(sitesock.sock, &readfds);
+	FD_SET(sitesock.sock, &errorfds);
+
+	if (select(sitesock.sock+1, &readfds, NULL, &errorfds, NULL) <= 0)
+	{
+		cout << "select error\n";
+	}
+	if(FD_ISSET(sitesock.sock, &errorfds))
+	{
+		cout << "error fds set\n";
+	}
+
+	string sitereply;
+	if(!sitesock.ReadLine(sitereply))
+	{
+		cout << "read failed\n";
+		return 0;
+	}
+	cout << "reply: " + sitereply;
+	sitesock.Close();
+
+	cout << "starting listen test\n";
+
 	if(!ss.Bind(options.listenip, options.listenport))
 	{
 		cout << "could not bind\n";
 		return 0;
 	}
+
+	ClientSock clientsock;
+	if(!clientsock.Init())
+	{
+		cout << "clientsock init failed\n";
+		return 0;
+	}
 	ss.Listen(100);
+	string ip;
+	int port;
+	ss.Accept(clientsock, ip, port);
+	cout << "connect from " << ip << " @ port " << port << "\n";
+	clientsock.WriteLine("hello\r\n");
+	clientsock.Close();
+	ss.Close();
 
-if(!options.logToScreen)
-{
-#ifdef _WIN32
-	cout << "Close console window now - tbnc running in background now\n";
-#endif
-	daemon(1,1);
-
-#ifdef _WIN32
-#else
-	if(options.pidfile != "")
-	{
-		int pid = getpid();
-		
-		ofstream pidf(options.pidfile.c_str(), ios::out | ios::trunc);
-		if (!pidf)
-		{
-			cout << "can not create pid file\n";			
-		}
-		else
-		{		
-			pidf << pid << "\n";
-			pidf.close();
-		}
-	}
-#endif
-}
-
-	while(1)
-	{
-		EntryThread *et = NULL;
-		et = new EntryThread(&options);
-		if(et != NULL)
-		{
-			if(et->cs.Init(false))
-			{
-				if(ss.Accept(et->cs,et->clientip,et->clientport))
-				{	
-					et->start(et);
-				}
-				else
-				{
-					options.Log("main: Accept failed");
-					delete et;
-				}
-			}
-			else
-			{
-				options.Log("main: init entry thread failed");
-				delete et;
-			}
-		}
-		else
-		{
-			options.Log("main: failed to create entry thread");
-		}
-#ifdef _WIN32
-		Sleep(10);
-#else
-		usleep(10 * 1000);
-#endif
-	}
-	return 1;
 }

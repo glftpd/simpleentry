@@ -3,6 +3,7 @@
 
 #include "global.h"
 #include "config.h"
+#include "lock.h"
 
 class Options
 {
@@ -25,6 +26,9 @@ public:
 	int delay;
 	int retrycount;
 	string natpasvip;
+	int checkForIp;
+	string logFile;
+	int logToScreen;
 	// config end#
 
 	// store entry ips here
@@ -35,7 +39,12 @@ public:
 	void GetOptional(void);
 	bool GetRequired(void);
 
+	void Log(string msg);
+
 	Config config;
+
+private:
+	Lock lock;
 };
 
 

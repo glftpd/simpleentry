@@ -1,15 +1,16 @@
 #include "entrythread.h"
 
-EntryThread::EntryThread(Options options)
+EntryThread::EntryThread(Options *options)
 {
 	this->options = options;
+	id = "-1";
 }
 
 // check reply for siteip - should never reach user
 bool EntryThread::checkReply(string reply)
 {
-	if(reply.find(options.siteip) != string::npos) return false;
-	string tmp = options.siteip;
+	if(reply.find(options->siteip) != string::npos) return false;
+	string tmp = options->siteip;
 	int pos = tmp.find(".");
 	while(pos != string::npos)
 	{
@@ -84,17 +85,17 @@ bool EntryThread::doSite()
 	{
 		return false;
 	}
-	
-	if(!checkReply(sitereply))
+	options->Log(id + "from site: " + sitereply);
+	if(options->checkForIp)
 	{
-		return false;
-	}
-	else
-	{
-		if(!cs.WriteLine(sitereply))
+		if(!checkReply(sitereply))
 		{
 			return false;
 		}
+	}	
+	if(!cs.WriteLine(sitereply))
+	{
+		return false;
 	}
 	return true;
 }
@@ -106,6 +107,21 @@ bool EntryThread::doUser()
 	if(!cs.ReadLine(userreply))
 	{
 		return false;
+	}
+	options->Log(id + "from user: " + userreply);
+	if(StartsWith(toupper(userreply), "IDNT"))
+	{
+		if(options->entries.size() == 0)
+		{
+			return false;
+		}
+		else
+		{
+			if(!sitesock.WriteLine(userreply))
+			{
+				return false;
+			}
+		}
 	}
 	if(StartsWith(toupper(userreply), "AUTH SSL"))
 	{
@@ -179,7 +195,7 @@ bool EntryThread::doPasv()
 	PasvTrafficThread *ptt = new PasvTrafficThread(options, ip, port);
 	if(ptt == NULL) return false;
 
-	int listenPort = port + options.addtopasvport;
+	int listenPort = port + options->addtopasvport;
 
 	if(!ptt->InitListen(listenPort))
 	{
@@ -192,13 +208,13 @@ bool EntryThread::doPasv()
 	else
 	{		
 		vector<string> tmpIp;
-		if(options.listenip != "")
+		if(options->listenip != "")
 		{
-			split(tmpIp,options.listenip,'.',false);
+			split(tmpIp,options->listenip,'.',false);
 		}
-		else if(options.natpasvip != "")
+		else if(options->natpasvip != "")
 		{
-			split(tmpIp, cs.GetIpStr(options.natpasvip),'.',false);
+			split(tmpIp, cs.GetIpStr(options->natpasvip),'.',false);
 		}
 		else
 		{
@@ -262,7 +278,7 @@ bool EntryThread::doCpsv()
 	PasvTrafficThread *ptt = new PasvTrafficThread(options, ip, port);
 	if(ptt == NULL) return false;
 
-	int listenPort = port + options.addtopasvport;
+	int listenPort = port + options->addtopasvport;
 
 	if(!ptt->InitListen(listenPort))
 	{
@@ -275,9 +291,9 @@ bool EntryThread::doCpsv()
 	else
 	{		
 		vector<string> tmpIp;
-		if(options.listenip != "")
+		if(options->listenip != "")
 		{
-			split(tmpIp,options.listenip,'.',false);
+			split(tmpIp,options->listenip,'.',false);
 		}
 		else
 		{
@@ -367,13 +383,17 @@ bool EntryThread::doPort(string portCmd)
 // main loop
 void EntryThread::loop(void)
 {
+	stringstream ss;
+	ss << cs.sock << ": ";
+	id = ss.str();
+
 	if(!sitesock.Init()) return;
-	if(options.entrylist.size() > 0)
+	if(options->entrylist.size() > 0)
 	{
 		bool found = false;
-		for(unsigned int i=0; i < options.entrylist.size();i++)
+		for(unsigned int i=0; i < options->entrylist.size();i++)
 		{
-			if(options.entrylist[i] == clientip)
+			if(options->entrylist[i] == clientip)
 			{
 				found = true;
 				break;
@@ -381,24 +401,27 @@ void EntryThread::loop(void)
 		}
 		if(!found) return;
 	}
-	if(options.connectip != "")
-	{			
-		if(!sitesock.Bind(options.connectip,0)) return;
-	}		
-	string ident = "*";
-	if(!sitesock.Connect(options.siteip,options.siteport))
+	if(options->connectip != "")
+	{
+		if(!sitesock.Bind(options->connectip,0)) return;
+	}	
+	if(!sitesock.Connect(options->siteip,options->siteport))
 	{
 		return;
 	}
-	if(options.idnt)
+	if(options->entrylist.size() == 0)
 	{
-		cs.Ident(clientip,options.listenport,clientport,3,ident,options.listenip);
-	}
-	if(options.idntcmd)
-	{			
-		stringstream ss;
-		ss << "IDNT " << ident << "@" << clientip << ":" << clientip << "\r\n";			
-		sitesock.WriteLine(ss.str());
+		string ident = "*";
+		if(options->idnt)
+		{
+			cs.Ident(clientip,options->listenport,clientport,3,ident,options->listenip);
+		}
+		if(options->idntcmd)
+		{
+			stringstream ss;
+			ss << "IDNT " << ident << "@" << clientip << ":" << clientip << "\r\n";
+			sitesock.WriteLine(ss.str());
+		}
 	}
 
 	fd_set readfds;
@@ -412,6 +435,7 @@ void EntryThread::loop(void)
 		FD_SET(cs.sock, &readfds);
 		FD_SET(sitesock.sock, &errorfds);
 		FD_SET(cs.sock, &errorfds);
+		
 		int tmpsock;
 		if (sitesock.sock > cs.sock)
 		{
@@ -435,7 +459,7 @@ void EntryThread::loop(void)
 		if (FD_ISSET(sitesock.sock, &readfds))
 		{	
 			if(!doSite())
-			{				
+			{
 				break;
 			}
 		}
@@ -443,7 +467,7 @@ void EntryThread::loop(void)
 		else if (FD_ISSET(cs.sock, &readfds))
 		{
 			if(!doUser())
-			{				
+			{
 				break;
 			}
 		}
@@ -453,8 +477,8 @@ void EntryThread::loop(void)
 		}
 	} // end while
 
-	sitesock.Close();		
-	cs.Close();		
+	sitesock.Close();
+	cs.Close();
 }
 
 EntryThread::~EntryThread(void)

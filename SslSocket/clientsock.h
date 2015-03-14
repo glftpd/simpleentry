@@ -21,6 +21,7 @@ public:
 	string cipherlist(void);
 	int Ident(string ip, int listenport, int clientport, int timeout, string &result, string bindip);
 	void ReadLoop(ClientSock &cs);
+	void FastReadLoop(ClientSock &cs);
 	int Connect(string ip, int port);
 
 	// properties

@@ -1,8 +1,7 @@
-CPPFLAGS = -W -Wall -g -I/usr/local/ssl/include -I../SslSocket
+CPPFLAGS = -fPIC -W -Wall -g -I/usr/local/ssl/include -I../SslSocket
 
 .cc.o   :
-	 g++ -c $(CPPFLAGS) $< -o $@
-	 
+	 g++ -c $(CPPFLAGS) $< -o $@	 
 
 all: main.o
 	g++ main.o -o ../bin/blowcrypt -lSslSocket -lssl -lcrypto -ldl -L../bin;strip ../bin/blowcrypt

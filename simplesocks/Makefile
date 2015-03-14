@@ -1,4 +1,4 @@
-CPPFLAGS = -W -Wall -g -I/usr/local/ssl/include -I../SslSocket
+CPPFLAGS = -fPIC -W -Wall -g -I/usr/local/ssl/include -I../SslSocket
 
 .cc.o   :
 	 g++ -c $(CPPFLAGS) $< -o $@

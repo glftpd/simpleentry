@@ -44,7 +44,7 @@ using namespace std;
 #endif
 
 
-#define version "SslSocket lib v.0.4.1 2010/08/10 (c) _hawk_/PPX"
+#define version "SslSocket lib v.0.4.2 2011/02/07 (c) _hawk_/PPX"
 
 #if SOLARIS
 int

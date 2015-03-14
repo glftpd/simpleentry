@@ -18,6 +18,9 @@ Options::Options()
 	addtopasvport = 0;
 	delay = 5;
 	retrycount = 15;
+	checkForIp = 1;
+	logFile = "";
+	logToScreen=0;
 }
 
 void Options::GetOptional(void)
@@ -36,11 +39,13 @@ void Options::GetOptional(void)
 	config.GetInt("delay",delay);
 	config.GetInt("retrycount",retrycount);
 	config.GetString("natpasvip",natpasvip);
-
+	config.GetInt("checkforip", checkForIp);
 	if(entries != "")
 	{
 		split(entrylist,entries,',',false);
 	}
+	config.GetString("logFile", logFile);
+	config.GetInt("logToScreen", logToScreen);
 }
 
 bool Options::GetRequired(void)
@@ -52,4 +57,26 @@ bool Options::GetRequired(void)
 	if(!config.GetInt("listen_port",listenport)) found = false;
 	if(!config.GetString("cert_path",certpath)) found = false;	
 	return found;
+}
+
+void Options::Log(string msg)
+{
+#ifdef _DEBUG
+	if(logToScreen)
+	{
+		cout << msg << "\r\n";
+	}
+	if(logFile != "")
+	{
+		lock.lock();
+		FILE * file;
+		file = fopen(logFile.c_str(), "a");
+		if (file != NULL)
+		{
+			fputs(msg.c_str(), file);
+			fclose(file);
+		}
+		lock.unlock();
+	}
+#endif
 }

@@ -31,27 +31,27 @@ public:
 	{
 		if(!sitesock.Init()) return;
 		if(connectip != "")
-		{			
+		{
 			if(!sitesock.Bind(connectip,0)) return;
-		}		
+		}
 		string ident = "*";
 		if(idnt)
 		{
 			cs.Ident(clientip,listenport,clientport,3,ident,listenip);
-		}		
+		}
 		if(!sitesock.Connect(siteip,siteport))
 		{
 			return;
 		}
 		if(idntcmd)
-		{			
+		{
 			stringstream ss;
-			ss << "IDNT " << ident << "@" << clientip << ":" << clientip << "\r\n";			
+			ss << "IDNT " << ident << "@" << clientip << ":" << clientip << "\r\n";
 			sitesock.WriteLine(ss.str());
 		}
-		cs.ReadLoop(sitesock);		
-		sitesock.Close();		
-		cs.Close();		
+		cs.FastReadLoop(sitesock);
+		sitesock.Close();
+		cs.Close();
 	}
 
 	~EntryThread()
@@ -77,7 +77,7 @@ int main(int argc,char *argv[])
 	if(arganz > 0) arg1 = argv[1];
 	if(arganz > 1) arg2 = argv[2];
 
-	cout << "Simple Win32/Linux entry bouncer v0.4.0 2009/09/23 (c) _hawk_/PPX\n";
+	cout << "Simple Win32/Linux entry bouncer v0.4.1 2010/02/07 (c) _hawk_/PPX\n";
 	cout << "Using " << version << "\n";
 	
 	if(arganz < 1 && arganz > 2)
