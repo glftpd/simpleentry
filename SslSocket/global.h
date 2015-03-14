@@ -2,7 +2,6 @@
 #define __GLOBAL_H
 #define _MULTI_THREADED
 
-#include <unistd.h>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -23,6 +22,7 @@
 #include <winbase.h>
 #pragma warning (disable:4251)
 #else
+#include <unistd.h>
 #include "pthread.h"
 #include <sys/types.h>
 #include <sys/socket.h>
