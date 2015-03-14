@@ -1067,6 +1067,51 @@ int BaseSock::Write(char *data,int nrbytes)
 	return 1;	
 }
 
+int BaseSock::FastWrite(char *data,int nrbytes)
+{	
+	int total = 0;
+	int bytesleft = nrbytes;
+	int rc,len;
+	len = nrbytes;
+	int count = 0;
+
+	while(total < nrbytes)
+	{
+		rc = send(sock,data+total,bytesleft,0);
+		if(rc > 0)
+		{
+			count = 0;
+			total += rc;
+			bytesleft -= rc;
+		}
+		else if (rc == 0)
+		{
+			return 0;
+		}
+		else
+		{
+			if(count == retrycount()) { return 0; } // not more then x retries
+
+#ifdef _WIN32
+			int err = WSAGetLastError();
+#else
+			int err = errno;
+#endif
+			if(err == EAGAIN)
+			{
+				Wait(__delay);
+				count++;
+				continue;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+	}
+	return 1;	
+}
+
 int BaseSock::Read(char *buffer,int &nrbytes)
 {
 	int count = 0;
@@ -1167,6 +1212,50 @@ int BaseSock::Read(char *buffer,int &nrbytes)
 		else
 		{
 			break;
+		}
+	}
+	return 0;
+}
+
+int BaseSock::FastRead(char *buffer,int &nrbytes)
+{
+	int count = 0;
+	while(1)
+	{
+		int rc;
+		rc = recv(sock,buffer,buffersize(),0);
+	  				
+		if (rc > 0) 
+		{ 
+			count = 0;
+			nrbytes = rc; 
+			return 1; 
+		}
+		else  if(rc == 0)
+		{
+			nrbytes=0; 
+			return 0; 
+		}
+		else
+		{	
+			if(count == retrycount()) { return 0; } // not more then x retries
+				
+				#ifdef _WIN32
+				int err = WSAGetLastError();
+#else
+				int err = errno;
+#endif
+				if(err == EAGAIN)
+				{
+					Wait(__delay);
+					count++;
+					continue;
+				}
+				else
+				{
+					nrbytes=0;
+					return 0;
+				}
 		}
 	}
 	return 0;

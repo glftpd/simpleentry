@@ -11,7 +11,7 @@
 class PasvTrafficThread: public Thread
 {
 public:
-	PasvTrafficThread(Options options, string siteip, int siteport);	
+	PasvTrafficThread(Options *options, string siteip, int siteport);	
 
 	bool InitSite();	
 	bool InitListen(int listenPort);
@@ -25,7 +25,7 @@ protected:
 	ClientSock sitesock;
 	ServerSock listensock;
 
-	Options options;
+	Options *options;
 	string siteip;
 	int siteport;
 };

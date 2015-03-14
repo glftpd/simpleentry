@@ -168,6 +168,67 @@ void ClientSock::ReadLoop(ClientSock &cs)
 	}
 }
 
+void ClientSock::FastReadLoop(ClientSock &cs)
+{	
+	int size = 0;
+	if(cs.buffersize() != buffersize()) return;
+	fd_set readfds;
+	fd_set errorfds;
+	struct timeval tv;
+
+	while(true)
+	{
+		if(shouldquit() == 1) return;
+
+		tv.tv_sec = 0;
+		tv.tv_usec = 10000;
+
+		FD_ZERO(&readfds);
+		FD_ZERO(&errorfds);
+		FD_SET(sock, &readfds);
+		FD_SET(cs.sock, &readfds);
+		FD_SET(sock, &errorfds);
+		FD_SET(cs.sock, &errorfds);
+		
+		int tmpsock = sock;
+		if (sock < cs.sock)
+		{
+			tmpsock = cs.sock;
+		}		
+				
+		if (select(tmpsock+1, &readfds, NULL, &errorfds, &tv) == -1)
+		{			
+			return;
+		}
+		if(FD_ISSET(sock, &errorfds) || FD_ISSET(cs.sock, &errorfds))
+		{			
+			return;
+		}
+		if (FD_ISSET(sock, &readfds))
+		{			
+			if(!FastRead(buffer,size))
+			{				
+				return;
+			}
+			if(!cs.FastWrite(buffer,size))
+			{				
+				return;
+			}
+		}
+		else if (FD_ISSET(cs.sock, &readfds))
+		{			
+			if(!cs.FastRead(buffer,size))
+			{				
+				return;
+			}
+			if(!FastWrite(buffer,size))
+			{				
+				return;
+			}
+		}		
+	}
+}
+
 string ClientSock::socksIp(void)
 {
 	return _socksIp;

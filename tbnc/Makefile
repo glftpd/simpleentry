@@ -1,12 +1,14 @@
-CPPFLAGS = -W -Wall -g -I/usr/local/ssl/include -I../SslSocket
+CPPFLAGS = -fPIC -W -Wall -g -I/usr/local/ssl/include -I../SslSocket
 
 .cpp.o   :
 	 g++ -c $(CPPFLAGS) $< -o $@
 	 
 
-all: main.o entrythread.o options.o pasvthread.o portthread.o
+all: main.o entrythread.o options.o pasvthread.o portthread.o confTest.o
 	g++ main.o entrythread.o options.o pasvthread.o portthread.o -o ../bin/tbnc -lSslSocket -lssl -lcrypto -ldl -lpthread -lz -L../bin;strip ../bin/tbnc
+	g++ confTest.o options.o -o ../bin/confTest -lSslSocket -lssl -lcrypto -ldl -lpthread -lz -L../bin;strip ../bin/confTest
 
+debug: CPPFLAGS += -D_DEBUG -g
 debug: main.o entrythread.o options.o pasvthread.o portthread.o
 	g++ main.o entrythread.o options.o pasvthread.o portthread.o -o ../bin/tbnc -lSslSocket -lssl -lcrypto -ldl -lpthread -lz -L../bin
 

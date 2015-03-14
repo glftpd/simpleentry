@@ -364,7 +364,7 @@ public:
 			return;
 		}
 		
-		cs.ReadLoop(sitesock);
+		cs.FastReadLoop(sitesock);
 		
 		sitesock.Close();
 		cs.Close();		

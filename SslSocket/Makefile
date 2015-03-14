@@ -1,4 +1,4 @@
-CPPFLAGS = -W -Wall -g -I/usr/local/ssl/include 
+CPPFLAGS = -fPIC -W -Wall -g -I/usr/local/ssl/include 
 
 .cpp.o   :
 	 g++ -fPIC -c $(CPPFLAGS) $< -o $@

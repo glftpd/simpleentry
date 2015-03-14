@@ -12,13 +12,16 @@ idnt_command=1; // send IDNT command to site
 connect_ip=; // bind to this ip for outgoing connections
 listen_ip=127.0.0.1; // bind listenport to this ip
 pidfile=; // if set a file containing the pid is created (only on linux)
-buffersize=65536; // internal buffersize in bytes
+buffersize=1048576; // internal buffersize in bytes
 sndrcvbufsize=625000; // tcp send and receive socket buffer size
 ipfordata=0; // always use site ip for data connects (useful when using nat and site reports internal ip for data transfers)
 addtopasvport=0; // bnc uses port number reported from site for pasv transfers - add this number to shift port range (can be negative)
 delay=5; // delay in ms after EAGAIN error
 retrycount=15; // how many retries for EAGAIN errors
 natpasvip=; // when using bnc with dynamic ip enter dyn host here (leave listen_ip blank then)
+checkforip=1; // if set, site reply is checked for site ip and connection is dropped if found (just to make sure site ip is not posted to clients)
+logFile=; // if set (and compiled as debug) some log messages are written to file
+logToScreen=0; // if set (and compiled as debug) bnc is not started to background and debug messages are printed on screen
 
 # format of options is name=value;
 # no spaces etc and don't forget the ';'

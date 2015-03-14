@@ -18,7 +18,7 @@ public:
 	string clientip;
 	int clientport;
 	
-	EntryThread(Options options);	
+	EntryThread(Options *options);	
 	
 	// main loop
 	void loop(void);	
@@ -47,7 +47,8 @@ protected:
 	// handle PORT command
 	bool doPort(string portCmd);	
 
-	Options options;
+	Options *options;
+	string id; // id used for log msg
 };
 
 

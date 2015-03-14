@@ -11,7 +11,7 @@
 class PortTrafficThread: public Thread
 {
 public:
-	PortTrafficThread(Options options, string siteip, int siteport);	
+	PortTrafficThread(Options *options, string siteip, int siteport);	
 
 	bool InitSite();
 	bool InitPort(string activeip,  int activeport);	
@@ -24,7 +24,7 @@ protected:
 	ClientSock clientsock;
 	ClientSock sitesock;
 
-	Options options;	
+	Options *options;	
 	string siteip;
 	int siteport;
 	string activeip;

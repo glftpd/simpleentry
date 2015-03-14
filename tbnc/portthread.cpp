@@ -1,6 +1,6 @@
 #include "portthread.h"
 
-PortTrafficThread::PortTrafficThread(Options options, string siteip, int siteport)
+PortTrafficThread::PortTrafficThread(Options *options, string siteip, int siteport)
 {
 	this->options = options;
 	this->siteip = siteip;
@@ -10,14 +10,14 @@ PortTrafficThread::PortTrafficThread(Options options, string siteip, int sitepor
 bool PortTrafficThread::InitSite()
 {
 	if(!sitesock.Init()) return false;
-	if(options.connectip != "")
+	if(options->connectip != "")
 	{			
-		if(!sitesock.Bind(options.connectip,0)) return false;
+		if(!sitesock.Bind(options->connectip,0)) return false;
 	}
 	string tmp = siteip;
-	if(options.ipfordata)
+	if(options->ipfordata)
 	{
-		tmp = options.siteip;
+		tmp = options->siteip;
 	}
 	if(!sitesock.Connect(tmp, siteport)) return false;
 	
@@ -29,9 +29,9 @@ bool PortTrafficThread::InitPort(string activeip,  int activeport)
 	this->activeip = activeip;
 	this->activeport = activeport;
 	if(!clientsock.Init()) return false;
-	if(options.listenip != "")
+	if(options->listenip != "")
 	{			
-		if(!clientsock.Bind(options.listenip,0)) return false;
+		if(!clientsock.Bind(options->listenip,0)) return false;
 	}
 	if(!clientsock.Connect(activeip, activeport)) return false;
 	return true;
