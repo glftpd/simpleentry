@@ -1372,7 +1372,7 @@ int BaseSock::BaseSslInit(std::string certfile, std::string dhfile)
 	}
 
 	SSL_CTX_set_default_verify_paths(serverctx);
-	SSL_CTX_set_options(serverctx,SSL_OP_ALL);
+	SSL_CTX_set_options(serverctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION | SSL_OP_SINGLE_DH_USE | SSL_OP_SINGLE_ECDH_USE | SSL_OP_CIPHER_SERVER_PREFERENCE);
 	SSL_CTX_set_mode(serverctx,SSL_MODE_AUTO_RETRY);
 	SSL_CTX_set_session_cache_mode(serverctx,SSL_SESS_CACHE_OFF);
 	SSL_CTX_set_verify(serverctx,SSL_VERIFY_PEER,verify_callback);
