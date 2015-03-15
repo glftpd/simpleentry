@@ -209,6 +209,8 @@ int _BaseInit(void)
 		return 0;
 	}	
 	#endif
+	ENGINE_load_builtin_engines();
+	ENGINE_register_all_complete();
 	SSL_load_error_strings();
 	SSL_library_init();
 	thread_setup();

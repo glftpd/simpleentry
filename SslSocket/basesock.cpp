@@ -1363,6 +1363,8 @@ static int verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 int BaseSock::BaseSslInit(std::string certfile, std::string dhfile)
 {
 	
+	std::string sessionId("sslsock");
+	
 	serverctx = SSL_CTX_new(SSLv23_server_method());
 	clientctx = SSL_CTX_new(SSLv23_client_method());
 
@@ -1374,7 +1376,8 @@ int BaseSock::BaseSslInit(std::string certfile, std::string dhfile)
 	SSL_CTX_set_default_verify_paths(serverctx);
 	SSL_CTX_set_options(serverctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION | SSL_OP_SINGLE_DH_USE | SSL_OP_SINGLE_ECDH_USE | SSL_OP_CIPHER_SERVER_PREFERENCE);
 	SSL_CTX_set_mode(serverctx,SSL_MODE_AUTO_RETRY);
-	SSL_CTX_set_session_cache_mode(serverctx,SSL_SESS_CACHE_OFF);
+	SSL_CTX_set_session_cache_mode(serverctx,SSL_SESS_CACHE_SERVER);
+	SSL_CTX_set_session_id_context(serverctx,(const unsigned char*)sessionId.c_str(),sessionId.size());
 	SSL_CTX_set_verify(serverctx,SSL_VERIFY_PEER,verify_callback);
 
 	SSL_CTX_set_default_verify_paths(clientctx);
@@ -1413,6 +1416,23 @@ int BaseSock::BaseSslInit(std::string certfile, std::string dhfile)
 	{
 		return 0;
 	}
+
+
+#if OPENSSL_VERSION_NUMBER >= 0x10002000L
+            /* OpenSSL >= 1.0.2 automatically handles ECDH temporary key parameter
+               selection. */
+            SSL_CTX_set_ecdh_auto(serverctx, 1);
+#else
+        {
+            EC_KEY *ecdh = NULL;
+            ecdh = EC_KEY_new_by_curve_name(NID_secp521r1);
+            if (ecdh == NULL) {
+                return 0;
+            }
+            SSL_CTX_set_tmp_ecdh(serverctx, ecdh);
+            EC_KEY_free(ecdh);
+        }	
+#endif
 
 	if (!SSL_CTX_check_private_key(serverctx))
 	{		
