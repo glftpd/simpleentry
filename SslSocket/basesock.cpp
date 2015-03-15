@@ -1363,7 +1363,7 @@ static int verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 int BaseSock::BaseSslInit(std::string certfile, std::string dhfile)
 {
 	
-	std::string sessionId("sslsock");
+	std::string sessionId("SslSocket");
 	
 	serverctx = SSL_CTX_new(SSLv23_server_method());
 	clientctx = SSL_CTX_new(SSLv23_client_method());
