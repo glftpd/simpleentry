@@ -1,5 +1,6 @@
 #include "global.h"
 #include "strings.h"
+#include <cstring>
 
 
 int main(int argc,char *argv[])

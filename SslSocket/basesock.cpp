@@ -1,5 +1,6 @@
 #include "basesock.h"
 #include "fingerprint.h"
+#include <cstring>
 
 // set global defaults
 int BaseSock::__buffersize = 65536;

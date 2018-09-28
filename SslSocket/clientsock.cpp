@@ -1,4 +1,5 @@
 #include "clientsock.h"
+#include <cstring>
 
 ClientSock::ClientSock(void)
 {

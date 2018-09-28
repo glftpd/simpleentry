@@ -1,4 +1,5 @@
 #include "strings.h"
+#include <cstring>
 
 string trim_right (const string & s, const string &t)
 { 
@@ -120,19 +121,31 @@ int decrypt(string key,unsigned char *datain,unsigned char *dataout,int s)
 	int ipos = 0;
 	int outlen = s;
 
+	EVP_CIPHER_CTX *pctx;
+#if 0
 	EVP_CIPHER_CTX ctx;
-	EVP_CIPHER_CTX_init(&ctx);
-    EVP_CipherInit_ex(&ctx, EVP_bf_cfb(), NULL, NULL, NULL,ipos );
-    EVP_CIPHER_CTX_set_key_length(&ctx, key.length());
-    EVP_CipherInit_ex(&ctx, NULL, NULL,(unsigned char*)key.c_str(), ivec,ipos );
+	pctx = &ctx;
+#else
+	pctx = EVP_CIPHER_CTX_new();
+#endif
+	EVP_CIPHER_CTX_init(pctx);
+    EVP_CipherInit_ex(pctx, EVP_bf_cfb(), NULL, NULL, NULL,ipos );
+    EVP_CIPHER_CTX_set_key_length(pctx, key.length());
+    EVP_CipherInit_ex(pctx, NULL, NULL,(unsigned char*)key.c_str(), ivec,ipos );
 
-	if(!EVP_CipherUpdate(&ctx, dataout, &outlen, datain, s))
+	if(!EVP_CipherUpdate(pctx, dataout, &outlen, datain, s))
 	{
+#if 1
+		EVP_CIPHER_CTX_free(pctx);
+#endif
 		return 0;
 	}
 
- 	EVP_CIPHER_CTX_cleanup(&ctx);
+	EVP_CIPHER_CTX_cleanup(pctx);
  	for (int i=0;i < (int)key.length();i++) { key[i] = '0'; }
+#if 1
+	EVP_CIPHER_CTX_free(pctx);
+#endif
         return 1;
 }
 
@@ -142,19 +155,31 @@ int encrypt(string key,unsigned char *datain,unsigned char *dataout,int s)
 	memset(ivec, 0,8);
 	int outlen = s;
 
+	EVP_CIPHER_CTX *pctx;
+#if 0
 	EVP_CIPHER_CTX ctx;
-	EVP_CIPHER_CTX_init(&ctx);
-        EVP_EncryptInit_ex(&ctx, EVP_bf_cfb(), NULL, NULL, NULL );
-        EVP_CIPHER_CTX_set_key_length(&ctx, key.length());
-        EVP_EncryptInit_ex(&ctx, NULL, NULL, (unsigned char*)key.c_str(), ivec );
+	pctx = &ctx;
+#else
+	pctx = EVP_CIPHER_CTX_new();
+#endif
+	EVP_CIPHER_CTX_init(pctx);
+        EVP_EncryptInit_ex(pctx, EVP_bf_cfb(), NULL, NULL, NULL );
+        EVP_CIPHER_CTX_set_key_length(pctx, key.length());
+        EVP_EncryptInit_ex(pctx, NULL, NULL, (unsigned char*)key.c_str(), ivec );
 
-	if(!EVP_EncryptUpdate(&ctx, dataout, &outlen, datain, s))
+	if(!EVP_EncryptUpdate(pctx, dataout, &outlen, datain, s))
 	{
+#if 1
+		EVP_CIPHER_CTX_free(pctx);
+#endif
 		return 0;
 	}
 
- 	EVP_CIPHER_CTX_cleanup(&ctx);
+	EVP_CIPHER_CTX_cleanup(pctx);
  	for (int i=0;i < (int)key.length();i++) { key[i] = '0'; }
+#if 1
+	EVP_CIPHER_CTX_free(pctx);
+#endif
         return 1;
 }
 

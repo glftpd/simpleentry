@@ -4,6 +4,7 @@
 #include "serversock.h"
 #include "thread.h"
 #include "config.h"
+#include <cstring>
 
 // config
 string username = "";

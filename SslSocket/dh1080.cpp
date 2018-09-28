@@ -1,4 +1,5 @@
 #include "dh1080.h"
+#include <cstring>
 
 namespace SslSocket
 {
@@ -129,8 +130,12 @@ namespace SslSocket
 		}
 		
 
+#if 0
 		dh->p = b_prime;
 		dh->g = b_generator;
+#else
+		DH_set0_pqg(dh, b_prime, NULL, b_generator);
+#endif
 
 		if (!DH_generate_key(dh)) 
 		{
@@ -141,13 +146,20 @@ namespace SslSocket
 		unsigned char *a,*b;
 		unsigned char *a_,*b_;
 
-		len = BN_num_bytes(dh->priv_key);
+		const BIGNUM *pub_key, *priv_key;
+#if 0
+		priv_key = dh->priv_key;
+		pub_key = dh->pub_key;
+#else
+		DH_get0_key(dh, &pub_key, &priv_key);
+#endif
+		len = BN_num_bytes(priv_key);
 			
 		a_ = (unsigned char *)malloc(200);
 		a = (unsigned char *)malloc(len);
 		
 		
-		BN_bn2bin(dh->priv_key, a);
+		BN_bn2bin(priv_key, a);
 		
 		htob64((char *)a, (char *)a_, len);
 		
@@ -161,12 +173,12 @@ namespace SslSocket
 		free(a_);
 
 		
-		len = BN_num_bytes(dh->pub_key);
+		len = BN_num_bytes(pub_key);
 		
 		b_ = (unsigned char *)malloc(200);
 		b = (unsigned char *)malloc(len);
 		
-		BN_bn2bin(dh->pub_key, b);
+		BN_bn2bin(pub_key, b);
 		
 		htob64((char *)b, (char *)b_, len);
 		
@@ -220,13 +232,21 @@ namespace SslSocket
 
 		
 
+#if 0
 		dh->p = b_prime;
 		dh->g = b_generator;
+#else
+		DH_set0_pqg(dh, b_prime, NULL, b_generator);
+#endif
 
 		memset(raw_buf, 0, 200);
 		len = b64toh((char *)Priv_Key, (char *)raw_buf);
 		b_myPrivkey = BN_bin2bn(raw_buf, len, NULL);
+#if 0
 		dh->priv_key = b_myPrivkey;
+#else
+		DH_set0_key(dh, NULL, b_myPrivkey);
+#endif
 
 		memset(raw_buf, 0, 200);
 		len = b64toh((char *)OtherPub_Key, (char *)raw_buf);
