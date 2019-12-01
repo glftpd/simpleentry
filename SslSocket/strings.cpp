@@ -2,37 +2,37 @@
 #include <cstring>
 
 string trim_right (const string & s, const string &t)
-{ 
-	string d (s); 
+{
+	string d (s);
 	string::size_type i (d.find_last_not_of (t));
 	if (i == string::npos)
 	return "";
 	else
-	return d.erase (d.find_last_not_of (t) + 1) ; 
-} 
+	return d.erase (d.find_last_not_of (t) + 1) ;
+}
 
-string trim_left (const string & s, const string &t) 
-{ 
-	string d (s); 
-	return d.erase (0, s.find_first_not_of (t)) ; 
+string trim_left (const string & s, const string &t)
+{
+	string d (s);
+	return d.erase (0, s.find_first_not_of (t)) ;
 }
 
 string trim (const string & s, const string &t)
-{ 
-	string d (s); 
-	return trim_left (trim_right (d, t), t) ; 
+{
+	string d (s);
+	return trim_left (trim_right (d, t), t) ;
 }
 
-// returns a lower case version of the string 
+// returns a lower case version of the string
 string tolower (const string & s)
 {
 	string d (s);
 
 	transform (d.begin (), d.end (), d.begin (), (int(*)(int)) tolower);
 	return d;
-} 
+}
 
-// returns an upper case version of the string 
+// returns an upper case version of the string
 string toupper (const string & s)
 {
 	string d (s);
@@ -45,7 +45,7 @@ int split(vector<string> &res, string str, char seperator, bool includeempty)
 {
 	res.clear();
     string::const_iterator start = str.begin();
-    while (true) 
+    while (true)
 	{
         string::const_iterator begin = start;
 
@@ -59,17 +59,17 @@ int split(vector<string> &res, string str, char seperator, bool includeempty)
 			res.push_back(string(begin, start));
 		}
 
-		if (start == str.end()) 
+		if (start == str.end())
 		{
             break;
         }
 
-        if (++start == str.end()) 
+        if (++start == str.end())
 		{
 			if(includeempty)
 			{
 				res.push_back("");
-			}			
+			}
             break;
         }
     }
@@ -122,7 +122,7 @@ int decrypt(string key,unsigned char *datain,unsigned char *dataout,int s)
 	int outlen = s;
 
 	EVP_CIPHER_CTX *pctx;
-#if 0
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	EVP_CIPHER_CTX ctx;
 	pctx = &ctx;
 #else
@@ -135,7 +135,7 @@ int decrypt(string key,unsigned char *datain,unsigned char *dataout,int s)
 
 	if(!EVP_CipherUpdate(pctx, dataout, &outlen, datain, s))
 	{
-#if 1
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 		EVP_CIPHER_CTX_free(pctx);
 #endif
 		return 0;
@@ -143,7 +143,7 @@ int decrypt(string key,unsigned char *datain,unsigned char *dataout,int s)
 
 	EVP_CIPHER_CTX_cleanup(pctx);
  	for (int i=0;i < (int)key.length();i++) { key[i] = '0'; }
-#if 1
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	EVP_CIPHER_CTX_free(pctx);
 #endif
         return 1;
@@ -156,7 +156,7 @@ int encrypt(string key,unsigned char *datain,unsigned char *dataout,int s)
 	int outlen = s;
 
 	EVP_CIPHER_CTX *pctx;
-#if 0
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	EVP_CIPHER_CTX ctx;
 	pctx = &ctx;
 #else
@@ -169,7 +169,7 @@ int encrypt(string key,unsigned char *datain,unsigned char *dataout,int s)
 
 	if(!EVP_EncryptUpdate(pctx, dataout, &outlen, datain, s))
 	{
-#if 1
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 		EVP_CIPHER_CTX_free(pctx);
 #endif
 		return 0;
@@ -177,7 +177,7 @@ int encrypt(string key,unsigned char *datain,unsigned char *dataout,int s)
 
 	EVP_CIPHER_CTX_cleanup(pctx);
  	for (int i=0;i < (int)key.length();i++) { key[i] = '0'; }
-#if 1
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 	EVP_CIPHER_CTX_free(pctx);
 #endif
         return 1;
@@ -189,30 +189,30 @@ int MatchIp(const string& ip1, const string& ip2)
 	if(ip1 == ip2) return 1;
 	vector<string> vip1;
 	vector<string> vip2;
-	if(split(vip1,ip1,'.',false) != 4) return 0; 
-	if(split(vip2,ip2,'.',false) != 4) return 0; 
+	if(split(vip1,ip1,'.',false) != 4) return 0;
+	if(split(vip2,ip2,'.',false) != 4) return 0;
 	// alle 4 blöcke vergleichen
 	for(int i=0; i < 4;i++)
 	{
 		string s1,s2;
 		s1 = vip1[i];
-		s2 = vip2[i];		
+		s2 = vip2[i];
 		int pos = 0;
 		int lpos = 0;
 		int rpos = 0;
-		
+
 		// den längeren block raussuchen
 		int max_size = 0;
 		max_size = (int)s1.length();
 		if((int)s2.length() > max_size) max_size = (int)s2.length();
-	
+
 		while(pos < max_size)
 		{
 			// stimmen die längen der laufvariablen noch?
 			if(s1[lpos] == '*') break; // sonderfall *
 			if(lpos >= (int)s1.length()) return 0;
 			if(rpos >= (int)s2.length()) return 0;
-			
+
 			// bei ? kein vergleich - nur zähler erhöhen
 			if(s1[lpos] == '?')
 			{
@@ -243,21 +243,21 @@ void getpassword(string prompt, string &pass)
 #ifdef _WIN32
 	HANDLE hConsole = GetStdHandle(STD_INPUT_HANDLE);
     DWORD oldMode;
-    if (!GetConsoleMode(hConsole, &oldMode)) 
+    if (!GetConsoleMode(hConsole, &oldMode))
 	{
         return;
     }
     DWORD newMode = oldMode & ~ENABLE_ECHO_INPUT;
-    if (!SetConsoleMode(hConsole, newMode)) 
+    if (!SetConsoleMode(hConsole, newMode))
 	{
         return;
     }
 
 	cout << prompt << ": ";
     cin >> pass;
-    
+
     // restore console echo
-    if (!SetConsoleMode(hConsole, oldMode)) 
+    if (!SetConsoleMode(hConsole, oldMode))
 	{
         return;
     }
@@ -310,7 +310,7 @@ bool parsePortCmd(string cmd, string &ip, int &port)
 }
 
 int random_range(int lowest_number, int highest_number)
-{	
+{
   if(lowest_number > highest_number){
       swap(lowest_number, highest_number);
   }
@@ -344,6 +344,6 @@ string replace(string input, string repl, string with)
 	{
 		tmp.replace(position, repl.length(), with);
 		position = tmp.find(repl, position + with.length());
-	} 
+	}
 	return tmp;
 }

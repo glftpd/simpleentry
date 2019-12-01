@@ -32,7 +32,7 @@ namespace SslSocket
 
 		if (l<2) return 0;
 		i=0, k=0;
-		while (1) 
+		while (1)
 		{
 			i++;
 			if (k+1<l) d[i-1]=((b64buf[((unsigned int)b[k])])<<2);
@@ -70,7 +70,7 @@ namespace SslSocket
 			if (h[(i>>3)]&m) t|=1;
 			j++;
 			if (!(m>>=1)) m=0x80;
-			if (!(j%6)) 
+			if (!(j%6))
 			{
 				d[k]=B64ABC[t];
 				t&=0;
@@ -80,7 +80,7 @@ namespace SslSocket
 		}
 		m=5-(j%6);
 		t<<=m;
-		if (m) 
+		if (m)
 		{
 			d[k]=B64ABC[t];
 			k++;
@@ -100,9 +100,9 @@ namespace SslSocket
 		return 0;
 	}
 
-	int DH1080_gen(unsigned char *Priv_Key, int &privlen, unsigned char *Pub_Key, int &publen) 
-	{	
-		unsigned long len;	
+	int DH1080_gen(unsigned char *Priv_Key, int &privlen, unsigned char *Pub_Key, int &publen)
+	{
+		unsigned long len;
 
 		DH *dh = NULL;
 		BIGNUM *b_prime = NULL;
@@ -116,72 +116,72 @@ namespace SslSocket
 			return 0;
 		}
 
-		if (!BN_hex2bn(&b_prime, prime1080)) 
+		if (!BN_hex2bn(&b_prime, prime1080))
 		{
 			DH_free(dh);
 			return 0;
 		}
 
-		if (!BN_dec2bn(&b_generator, "2")) 
+		if (!BN_dec2bn(&b_generator, "2"))
 		{
 			if(b_prime != NULL) OPENSSL_free(b_prime);
 			DH_free(dh);
 			return 0;
 		}
-		
 
-#if 0
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 		dh->p = b_prime;
 		dh->g = b_generator;
 #else
 		DH_set0_pqg(dh, b_prime, NULL, b_generator);
 #endif
 
-		if (!DH_generate_key(dh)) 
+		if (!DH_generate_key(dh))
 		{
 			DH_free(dh);
 			return 0;
 		}
-		
+
 		unsigned char *a,*b;
 		unsigned char *a_,*b_;
 
 		const BIGNUM *pub_key, *priv_key;
-#if 0
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 		priv_key = dh->priv_key;
 		pub_key = dh->pub_key;
 #else
 		DH_get0_key(dh, &pub_key, &priv_key);
 #endif
 		len = BN_num_bytes(priv_key);
-			
+
 		a_ = (unsigned char *)malloc(200);
 		a = (unsigned char *)malloc(len);
-		
-		
+
+
 		BN_bn2bin(priv_key, a);
-		
+
 		htob64((char *)a, (char *)a_, len);
-		
+
 		privlen = (int)strlen((const char *)a_);
 		free(a);
-		
+
 		for(int i=0; i < privlen;i++)
 		{
 			Priv_Key[i] = a_[i];
 		}
 		free(a_);
 
-		
+
 		len = BN_num_bytes(pub_key);
-		
+
 		b_ = (unsigned char *)malloc(200);
 		b = (unsigned char *)malloc(len);
-		
+
 		BN_bn2bin(pub_key, b);
-		
+
 		htob64((char *)b, (char *)b_, len);
-		
+
 		publen = (int)strlen((const char *)b_);
 		free(b);
 		for(int i=0; i < publen;i++)
@@ -189,15 +189,15 @@ namespace SslSocket
 			Pub_Key[i] = b_[i];
 		}
 		free(b_);
-			
+
 		DH_free(dh);
-		
+
 		return 1;
 	}
 
 
 
-	int DH1080_comp(unsigned char *Priv_Key, unsigned char *OtherPub_Key, unsigned char *Secret_Key, int &secretlen) 
+	int DH1080_comp(unsigned char *Priv_Key, unsigned char *OtherPub_Key, unsigned char *Secret_Key, int &secretlen)
 	{
 		int len;
 		unsigned char SHA256digest[32];
@@ -207,9 +207,9 @@ namespace SslSocket
 		BIGNUM *b_HisPubkey = NULL;
 		BIGNUM *b_generator = NULL;
 		DH *dh = NULL;
-		
+
 		unsigned char raw_buf[200];
-		
+
 		dh = DH_new();
 
 		if(dh == NULL)
@@ -217,22 +217,22 @@ namespace SslSocket
 			return 0;
 		}
 
-		if (!BN_hex2bn(&b_prime, prime1080)) 
+		if (!BN_hex2bn(&b_prime, prime1080))
 		{
 			DH_free(dh);
 			return 0;
 		}
 
-		if (!BN_dec2bn(&b_generator, "2")) 
+		if (!BN_dec2bn(&b_generator, "2"))
 		{
 			if(b_prime != NULL) OPENSSL_free(b_prime);
 			DH_free(dh);
 			return 0;
 		}
 
-		
 
-#if 0
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 		dh->p = b_prime;
 		dh->g = b_generator;
 #else
@@ -242,7 +242,7 @@ namespace SslSocket
 		memset(raw_buf, 0, 200);
 		len = b64toh((char *)Priv_Key, (char *)raw_buf);
 		b_myPrivkey = BN_bin2bn(raw_buf, len, NULL);
-#if 0
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 		dh->priv_key = b_myPrivkey;
 #else
 		DH_set0_key(dh, NULL, b_myPrivkey);
@@ -263,7 +263,7 @@ namespace SslSocket
 		SHA256_Final(SHA256digest, &c);
 		memset(raw_buf, 0, 200);
 		secretlen = htob64((char *)SHA256digest, (char *)raw_buf, 32);
-		
+
 		for(int i=0; i < secretlen;i++)
 		{
 			Secret_Key[i] = raw_buf[i];
@@ -272,6 +272,6 @@ namespace SslSocket
 		BN_clear_free(b_HisPubkey);
 		free(key);
 		return 1;
-	} 
+	}
 
 }
