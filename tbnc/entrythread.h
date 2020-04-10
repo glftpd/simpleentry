@@ -17,6 +17,7 @@ public:
 	ClientSock sitesock;
 	string clientip;
 	int clientport;
+  bool clientipv6;
 	
 	EntryThread(Options *options);	
 	
@@ -40,6 +41,12 @@ protected:
 
 	// handle PASV command
 	bool doPasv();
+
+	// handle EPSV command
+	bool doEpsv();
+
+	// handle FEAT command
+	bool doFeat();
 
 	// handle CPSV command
 	bool doCpsv();

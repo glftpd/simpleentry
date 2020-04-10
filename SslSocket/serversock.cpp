@@ -17,6 +17,7 @@ int ServerSock::Init()
 	if(!GetSock(sock)) return 0;
 	buffer = new char [_buffersize];
 	if(buffer == NULL) return 0;	
+  if(!setreuse(sock)) return 0;
 	return 1;
 }
 

@@ -45,8 +45,8 @@ public:
 
 	virtual int Init(void) {return 0;} // make this class abstract
 	int Bind(string ip, int port);
-	int _Connect(string ip, int port);
-	int _Connect5(string ip, int port, string socksIp, int socksPort, string socksUser, string socksPass, bool socksSsl, int &status);
+	int _Connect(string ip, int port, bool &ipv6);
+	int _Connect5(string ip, int port, string socksIp, int socksPort, string socksUser, string socksPass, bool socksSsl, bool &ipv6, int &status);
 
 	int CanRead(int timeout);
 	int ReadLine(string &str);
@@ -57,7 +57,7 @@ public:
 	int FastWrite(char *data,int nrbytes);
 	int BlockWrite(char *data,int nrbytes);
 	int BlockRead(char *buffer, int &nrbytes);
-	struct sockaddr_in GetIp(string ip, int port);
+	struct sockaddr_in6 GetIp(string ip, int port);
 	string GetIpStr(string ip);
 
 	void setquit(int quit);
@@ -82,7 +82,6 @@ protected:
 	
 	int _shouldquit;
 	SSL *ssl;
-	
 	
 	int SocketOption(int &,int);
 	int setnonblocking(int);

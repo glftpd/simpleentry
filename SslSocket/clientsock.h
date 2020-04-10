@@ -37,6 +37,7 @@ public:
 	void socksSsl(bool socksSsl);
 	bool useSocks(void);
 	void useSocks(bool useSocks);
+  bool ipv6(void);
 
 
 protected:
@@ -46,6 +47,7 @@ protected:
 	string _socksUser;
 	bool _socksSsl;
 	bool _useSocks;
+	bool _ipv6;
 };
 
 

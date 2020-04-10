@@ -5,6 +5,7 @@ ClientSock::ClientSock(void)
 {
 	buffer = NULL;
 	ssl = NULL;
+  _ipv6 = false;
 	_socksIp = "";
 	_socksPort = 0;
 	_socksUser = "";
@@ -290,15 +291,20 @@ void ClientSock::useSocks(bool useSocks)
 	_useSocks = useSocks;
 }
 
+bool ClientSock::ipv6(void)
+{
+	return _ipv6;
+}
+
 int ClientSock::Connect(string ip, int port)
 {
 	if(!useSocks())
 	{
-		return _Connect(ip, port);
+		return _Connect(ip, port, _ipv6);
 	}
 	else
 	{
 		int status;
-		return _Connect5(ip, port, socksIp(), socksPort(), socksUser(), socksPass(), socksSsl(), status);
+		return _Connect5(ip, port, socksIp(), socksPort(), socksUser(), socksPass(), socksSsl(), _ipv6, status);
 	}
 }
