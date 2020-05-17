@@ -40,8 +40,7 @@ void PasvTrafficThread::loop(void)
 	if(!clientsock.Init(false)) return;
 	if(!listensock.Accept(clientsock,ip,port,listensock.connecttimeout())) return;
 	
-	//sitesock.FastReadLoop(clientsock);
-	sitesock.ReadLoop(clientsock);
+	sitesock.FastReadLoop(clientsock);
 	
 	clientsock.Close();
 	sitesock.Close();

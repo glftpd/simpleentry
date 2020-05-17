@@ -599,27 +599,15 @@ int BaseSock::setreuse(int &socket)
 struct sockaddr_in6 BaseSock::GetIp(string ip,int port)
 {
 	struct sockaddr_in6 addr;
-  if (inet_pton(AF_INET , ip.c_str(), &(addr.sin6_addr)) == 1) {
-    ip = "::FFFF:"+ip;
-  }
-  int s = inet_pton(AF_INET6 , ip.c_str(), &(addr.sin6_addr));
-	if(s < 0)
-	{
-		struct hostent *he;
-	
-		if((he = gethostbyname2(ip.c_str(),  AF_INET6)) == NULL)
-		{	
-			ip = "::";
-      inet_pton(AF_INET6 , ip.c_str(), &(addr.sin6_addr));
-		}
-		else
-		{
-			addr.sin6_addr = *(struct in6_addr*)he->h_addr;
-		}
-	}
-  addr.sin6_family = AF_INET6;
-	addr.sin6_port = htons(port);
-	return addr;
+  struct addrinfo hints, *res;
+  int n, sockfd;
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_INET6;
+  hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_PASSIVE;
+  n = getaddrinfo(ip.c_str(), to_string(port).c_str(), &hints, &res);
+  memcpy(&addr, res->ai_addr, sizeof(addr));
+  freeaddrinfo(res);
+  return addr;
 }
 
 string BaseSock::GetIpStr(string ip)
