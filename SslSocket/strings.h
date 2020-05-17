@@ -20,6 +20,7 @@ DLL void getpassword(string prompt, string &pass);
 DLL int MatchIp(const string& ip1, const string& ip2);
 DLL int ftpCode(string reply);
 DLL bool parsePasvCmd(string cmd, string &ip, int &port);
+DLL bool parseEpsvCmd(string cmd, string &ip, int &port);
 DLL bool parsePortCmd(string cmd, string &ip, int &port);
 DLL int random_range(int lowest_number, int highest_number);
 DLL string int2str(int);

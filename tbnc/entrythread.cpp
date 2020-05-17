@@ -131,9 +131,17 @@ bool EntryThread::doUser()
 	{
 		if(!doSsl(1)) return false;
 	}
+	else if(StartsWith(toupper(userreply), "FEAT"))
+  {
+     if(!doFeat()) return false;
+  }
 	else if(StartsWith(toupper(userreply), "PASV"))
 	{
 		if(!doPasv()) return false;
+	}
+	else if(StartsWith(toupper(userreply), "EPSV"))
+	{
+		if(!doEpsv()) return false;
 	}
 	else if(StartsWith(toupper(userreply), "CPSV"))
 	{
@@ -158,8 +166,11 @@ bool EntryThread::doPasv()
 {
 	string reply;
 	bool error = false;
+  int ret;
 
-	if(!sitesock.WriteLine("PASV\r\n"))
+  if (sitesock.ipv6()) ret = sitesock.WriteLine("EPSV\r\n");
+  else  ret = sitesock.WriteLine("PASV\r\n");
+  if(!ret)
 	{
 		error = true;
 	}
@@ -172,7 +183,7 @@ bool EntryThread::doPasv()
 		else
 		{
 			int code = ftpCode(reply);
-			if(code != 227)
+			if(code != 227 && code != 229)
 			{
 				error = true;
 			}
@@ -190,7 +201,12 @@ bool EntryThread::doPasv()
 	
 	string ip;
 	int port;
-	if(!parsePasvCmd(reply,ip,port)) return false;
+  if (sitesock.ipv6()) {
+    if(!parseEpsvCmd(reply,ip,port)) return false;
+    if (ip=="")  ip = options->siteip;
+  } else {
+    if(!parsePasvCmd(reply,ip,port)) return false;
+  }
 	
 	PasvTrafficThread *ptt = new PasvTrafficThread(options, ip, port);
 	if(ptt == NULL) return false;
@@ -236,6 +252,113 @@ bool EntryThread::doPasv()
 	return true;
 }
 
+// handle EPSV command
+bool EntryThread::doEpsv()
+{
+	string reply;
+	bool error = false;
+  int ret;
+
+  if (sitesock.ipv6()) ret = sitesock.WriteLine("EPSV\r\n");
+  else  ret = sitesock.WriteLine("PASV\r\n");
+  if(!ret)
+	{
+		error = true;
+	}
+	else
+	{
+		if(!sitesock.ReadLine(reply))
+		{
+			error = true;
+		}
+		else
+		{
+			int code = ftpCode(reply);
+			if(code != 227 && code != 229)
+			{
+				error = true;
+			}
+		}
+	}
+
+	if(error)
+	{
+		if(!cs.WriteLine("425 Can't open data connection.\r\n"))
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	string ip;
+	int port;
+  if (sitesock.ipv6()) {
+    if(!parseEpsvCmd(reply,ip,port)) return false;
+    if (ip=="")  ip = options->siteip;
+  } else {
+    if(!parsePasvCmd(reply,ip,port)) return false;
+  }
+	
+	PasvTrafficThread *ptt = new PasvTrafficThread(options, ip, port);
+	if(ptt == NULL) return false;
+
+	int listenPort = port + options->addtopasvport;
+
+	if(!ptt->InitListen(listenPort))
+	{
+		delete ptt;
+		if(!cs.WriteLine("425 Can't open data connection.\r\n"))
+		{
+			return false;
+		}
+	}
+	else
+	{		
+		if(!cs.WriteLine("229 Entering Passive Mode (|||" + int2str(listenPort) + "|)\r\n"))
+		{
+			delete ptt;
+			return false;
+		}
+		ptt->start(ptt);
+	}		
+	return true;
+}
+
+// handle FEAT command^M
+bool EntryThread::doFeat()
+{
+  string reply;
+  bool error = false;
+  if(!sitesock.WriteLine("FEAT\r\n"))
+  {
+    error = true;
+  }
+  else
+  {
+    if(!sitesock.ReadLine(reply))
+    {
+      error = true;
+    }
+  }
+  if (error) {
+    reply = "500 'FEAT': Command not understood.\r\n";
+  }
+  else {
+    int index;
+    //index = reply.find("CPSV", 0);
+    //if (index!= string::npos) reply.replace(index, 4, "PASV");
+    if (!clientipv6) {
+      index = reply.find("EPSV", 0);
+      if (index!= string::npos) reply.replace(index, 4, "PASV");
+      index = reply.find("EPRT", 0);
+      if (index!= string::npos) reply.replace(index, 4, "PORT");
+    }
+  }
+
+ if(!cs.WriteLine(reply)) return false;
+ else return true;
+}
+
 // handle CPSV command
 bool EntryThread::doCpsv()
 {
@@ -255,7 +378,56 @@ bool EntryThread::doCpsv()
 		else
 		{
 			int code = ftpCode(reply);
-			if(code != 227)
+      if(code != 200)
+      {
+        error = true;
+      }
+       else {
+          if(!sitesock.WriteLine("SSCN ON\r\n")) {
+            error  = true;
+          } 
+          else {
+            if(!sitesock.ReadLine(reply)) {
+               error = true;
+            }
+            else {
+              int code = ftpCode(reply);
+              if(code != 200) {
+                error = true;
+              }
+            }
+          }
+       }
+    }
+  }
+  if(error)
+  {
+    if(!cs.WriteLine("500 'CPSV': Command not understood.\r\n"))
+    {
+      return false;
+    }
+    return true;
+  }
+   
+  error = false;
+  int ret;
+
+  if (sitesock.ipv6()) ret = sitesock.WriteLine("EPSV\r\n");
+  else  ret = sitesock.WriteLine("CPSV\r\n");
+  if(!ret)
+  {
+    error = true;
+  }
+  else
+  {
+    if(!sitesock.ReadLine(reply))
+    {
+      error = true;
+    }
+    else
+    {
+      int code = ftpCode(reply);
+      if(code != 227 && code != 229)
 			{
 				error = true;
 			}
@@ -273,7 +445,12 @@ bool EntryThread::doCpsv()
 	
 	string ip;
 	int port;
-	if(!parsePasvCmd(reply,ip,port)) return false;
+  if (sitesock.ipv6()) {
+    if(!parseEpsvCmd(reply,ip,port)) return false;
+     if (ip=="")  ip = options->siteip;
+  } else {
+    if(!parsePasvCmd(reply,ip,port)) return false;
+  }
 	
 	PasvTrafficThread *ptt = new PasvTrafficThread(options, ip, port);
 	if(ptt == NULL) return false;
@@ -321,7 +498,10 @@ bool EntryThread::doPort(string portCmd)
 	string reply;
 	bool error = false;
 
-	if(!sitesock.WriteLine("PASV\r\n"))
+  int ret;
+  if (sitesock.ipv6()) ret = sitesock.WriteLine("EPSV\r\n");
+  else ret = sitesock.WriteLine("PASV\r\n"); 
+	if(!ret)
 	{
 		error = true;
 	}
@@ -334,7 +514,7 @@ bool EntryThread::doPort(string portCmd)
 		else
 		{
 			int code = ftpCode(reply);
-			if(code != 227)
+			if(code != 227 && code != 229)
 			{
 				error = true;
 			}
@@ -352,7 +532,12 @@ bool EntryThread::doPort(string portCmd)
 
 	string ip;
 	int port;
-	if(!parsePasvCmd(reply,ip,port)) return false;
+  if  (sitesock.ipv6()) { 
+    if(!parseEpsvCmd(reply,ip,port)) return false;
+    if (ip=="")  ip = options->siteip;
+  } else {
+    if(!parsePasvCmd(reply,ip,port)) return false;
+  }
 	
 	string activeip;
 	int activeport;
@@ -388,12 +573,20 @@ void EntryThread::loop(void)
 	id = ss.str();
 
 	if(!sitesock.Init()) return;
+  string clientip2;
+  if ( clientip.length() > 7 && clientip.substr(0,7) == "::ffff:") {
+    clientip2 = clientip.substr(7) ;
+    clientipv6 = false;
+  } else {
+    clientip2 = clientip;
+    clientipv6 = true;
+  }
 	if(options->entrylist.size() > 0)
 	{
 		bool found = false;
 		for(unsigned int i=0; i < options->entrylist.size();i++)
 		{
-			if(options->entrylist[i] == clientip)
+			if(options->entrylist[i] == clientip2)
 			{
 				found = true;
 				break;
@@ -414,12 +607,12 @@ void EntryThread::loop(void)
 		string ident = "*";
 		if(options->idnt)
 		{
-			cs.Ident(clientip,options->listenport,clientport,3,ident,options->listenip);
+			cs.Ident(clientip2,options->listenport,clientport,3,ident,options->listenip);
 		}
 		if(options->idntcmd)
 		{
 			stringstream ss;
-			ss << "IDNT " << ident << "@" << clientip << ":" << clientip << "\r\n";
+			ss << "IDNT " << ident << "@" << clientip2 << ":" << clientip2 << "\r\n";
 			sitesock.WriteLine(ss.str());
 		}
 	}

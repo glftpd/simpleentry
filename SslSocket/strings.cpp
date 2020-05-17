@@ -295,6 +295,20 @@ bool parsePasvCmd(string cmd, string &ip, int &port)
 	return true;
 }
 
+bool parseEpsvCmd(string cmd, string &ip, int &port) {
+  int pos1 = cmd.find("(");
+  int pos2 = cmd.find(")",pos1);
+  if(pos1 == string::npos || pos2 == string::npos) return false;
+  string tmp = cmd.substr(pos1 + 1, pos2 - 2);
+  vector<string> vec;
+  if(split(vec,tmp,'|',false) == 2) { //rfc response
+   ip = "";
+   port = atoi(vec[0].c_str());
+   return true;
+  }
+  return false;
+}
+
 bool parsePortCmd(string cmd, string &ip, int &port)
 {
 	size_t pos1 = cmd.find(" ");

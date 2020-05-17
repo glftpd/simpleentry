@@ -136,11 +136,13 @@ int BaseSock::Delay(void)
 
 // other functions
 
-int BaseSock::_Connect(string host,int port)
+int BaseSock::_Connect(string host,int port,bool &ipv6)
 {	
 	
-	struct sockaddr_in adr;
+	struct sockaddr_in6 adr;
 	adr = GetIp(host,port);
+  ipv6 = !IN6_IS_ADDR_V4MAPPED(&adr.sin6_addr);
+  
 	if(!setnonblocking(sock))
 	{
 		return 0;
@@ -260,9 +262,9 @@ int BaseSock::_Connect(string host,int port)
 	return 0;
 }
 
-int BaseSock::_Connect5(string ip, int port, string socksIp, int socksPort, string socksUser, string socksPass, bool socksSsl, int &status)
+int BaseSock::_Connect5(string ip, int port, string socksIp, int socksPort, string socksUser, string socksPass, bool socksSsl, bool &ipv6, int &status)
 {
-	if(!_Connect(socksIp, socksPort))
+	if(!_Connect(socksIp, socksPort, ipv6))
 	{
 		status = 1; // socks connect failed
 		return 0;
@@ -340,10 +342,10 @@ int BaseSock::_Connect5(string ip, int port, string socksIp, int socksPort, stri
     buffer[2] = 0;
     buffer[3] = 1;
 
-	struct sockaddr_in adr;
+	struct sockaddr_in6 adr;
 	adr = GetIp(ip,port);
 	//memcpy(&adr.sin_addr.s_addr,buffer+4,4);
-	memcpy(buffer+4,&adr.sin_addr.s_addr,4);
+	memcpy(buffer+4,&adr.sin6_addr.s6_addr,4); //doesn't work in v6, need proto update
     buffer[8] = (char)(port / 256);
     buffer[9] = (char)(port % 256);
 
@@ -433,7 +435,7 @@ int BaseSock::CanRead(int timeout)
 
 int BaseSock::GetSock(int &sock)
 {		
-	if((sock = socket(AF_INET,SOCK_STREAM,0)) == -1)
+	if((sock = socket(AF_INET6,SOCK_STREAM,0)) == -1)
 	{
 		sock = -1;
 		
@@ -594,38 +596,26 @@ int BaseSock::setreuse(int &socket)
 	return SocketOption(socket, SO_REUSEADDR);
 }
 
-struct sockaddr_in BaseSock::GetIp(string ip,int port)
+struct sockaddr_in6 BaseSock::GetIp(string ip,int port)
 {
-	struct sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	unsigned long lip = inet_addr(ip.c_str());
-	if(lip == INADDR_NONE)
-	{
-		struct hostent *he;
-	
-		if((he = gethostbyname(ip.c_str())) == NULL)
-		{	
-			lip = inet_addr("0.0.0.0");
-			addr.sin_addr.s_addr = lip;
-		}
-		else
-		{
-			addr.sin_addr = *(struct in_addr*)he->h_addr;
-		}
-	}
-	else
-	{
-		addr.sin_addr.s_addr = lip;
-	}
-	addr.sin_port = htons(port);
-	memset(&(addr.sin_zero), '\0', 8);
-	return addr;
+	struct sockaddr_in6 addr;
+  struct addrinfo hints, *res;
+  int n, sockfd;
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_INET6;
+  hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_PASSIVE;
+  n = getaddrinfo(ip.c_str(), to_string(port).c_str(), &hints, &res);
+  memcpy(&addr, res->ai_addr, sizeof(addr));
+  freeaddrinfo(res);
+  return addr;
 }
 
 string BaseSock::GetIpStr(string ip)
 {
-	sockaddr_in adr = GetIp(ip,0);
-	string tmpip(inet_ntoa(adr.sin_addr));
+	sockaddr_in6 adr = GetIp(ip,0);
+  char buf[64];
+  inet_ntop(AF_INET6, &(adr.sin6_addr), buf, 64);
+	string tmpip(buf);
 	return tmpip;
 }
 
@@ -943,20 +933,20 @@ void BaseSock::setquit(int quit)
 
 int BaseSock::Bind(string ip,int port)
 {
-	struct sockaddr_in adr;
+	struct sockaddr_in6 adr;
 	if (ip != "")
 	{
 		adr = GetIp(ip,port);
 	}
 	else
-	{		
-		adr.sin_addr.s_addr = INADDR_ANY;
-		adr.sin_port = htons(port);
-		adr.sin_family = AF_INET;
-		memset(&(adr.sin_zero), '\0', 8);
+	{	
+    adr.sin6_addr  = in6addr_any;
+    adr.sin6_port = htons(port);
+    adr.sin6_family = AF_INET6;
+    adr.sin6_flowinfo = 0;
 	}
 	if(!setreuse(sock)) return 0;
-	if(bind(sock,(struct sockaddr *)&adr, sizeof(struct sockaddr)) != 0)
+	if(bind(sock,(struct sockaddr *)&adr, sizeof(adr)) != 0)
 	{		
 		return 0;
 	}
@@ -1265,7 +1255,7 @@ int BaseSock::_Accept(int listensock,int &newsock,string &clientip,int &clientpo
 {	
 	fd_set readfds;
 	fd_set errorfds;
-	struct sockaddr_in adr;
+	struct sockaddr_in6 adr;
 	
 	if(sec > 0)
 	{
@@ -1327,8 +1317,10 @@ int BaseSock::_Accept(int listensock,int &newsock,string &clientip,int &clientpo
 		return 0;
 	}
 	
-	clientip = inet_ntoa(adr.sin_addr);
-	clientport = ntohs(adr.sin_port);
+  char  charbuf[INET6_ADDRSTRLEN];
+  clientip = inet_ntop(adr.sin6_family, &adr.sin6_addr, charbuf,  INET6_ADDRSTRLEN);
+  clientport = ntohs(adr.sin6_port);
+
 	
 	if(!setnonblocking(newsock))
 	{
